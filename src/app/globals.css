@@ -1,0 +1,163 @@
+@import "tailwindcss";
+
+@layer base {
+  html {
+    font-family: system-ui, sans-serif;
+  }
+
+  body {
+    @apply antialiased;
+  }
+}
+
+@layer components {
+  .gantt-cell {
+    @apply w-8 h-8 border-l border-gray-200 relative;
+  }
+
+  .gantt-bar {
+    @apply h-6 rounded-sm mx-0.5 mt-1 shadow-sm;
+  }
+
+  .gantt-bar-critical {
+    @apply bg-red-500 shadow-md;
+  }
+
+  .pert-node {
+    @apply w-20 h-20 rounded-full border-2 flex flex-col items-center justify-center text-xs font-semibold;
+  }
+
+  .pert-node-normal {
+    @apply border-gray-400 bg-white text-gray-800;
+  }
+
+  .pert-node-critical {
+    @apply border-red-500 bg-red-50 text-red-800;
+  }
+
+  .task-card {
+    @apply bg-gray-50 p-4 rounded-lg border border-gray-200;
+  }
+
+  .task-card-critical {
+    @apply bg-red-50 border-red-200;
+  }
+
+  .button-primary {
+    @apply bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium;
+  }
+
+  .button-secondary {
+    @apply bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors font-medium;
+  }
+
+  .button-success {
+    @apply bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors font-medium;
+  }
+
+  .button-danger {
+    @apply bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors font-medium;
+  }
+}
+
+/* Animations personnalisées */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Styles pour les tableaux responsive */
+@media (max-width: 768px) {
+  .table-responsive {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .table-responsive table {
+    width: 100%;
+    min-width: 600px;
+  }
+}
+
+/* Styles pour les barres de Gantt */
+.gantt-timeline {
+  min-width: fit-content;
+}
+
+.gantt-task-row {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.gantt-task-row:hover {
+  background-color: #f9fafb;
+}
+
+/* Styles pour les nœuds PERT */
+.pert-network {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pert-edge {
+  position: relative;
+}
+
+.pert-edge::after {
+  content: '→';
+  position: absolute;
+  right: -1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+  font-weight: bold;
+}
+
+/* Responsive design amélioré */
+@media (max-width: 640px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .grid-responsive {
+    grid-template-columns: 1fr;
+  }
+
+  .text-responsive {
+    font-size: 1.5rem;
+  }
+
+  .card-responsive {
+    margin-bottom: 1rem;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .grid-responsive {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1025px) {
+  .grid-responsive {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
