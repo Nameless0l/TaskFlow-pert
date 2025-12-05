@@ -108,20 +108,100 @@ const PERTGraph = ({ pertData }) => {
           const isCritical = node.isCritical;
           const strokeColor = isCritical ? '#dc2626' : '#6b7280';
           const fillColor = isCritical ? '#fef2f2' : '#ffffff';
+          
+          // Calculer les marges
+          const totalSlack = node.latestTime - node.earliestTime;
+          const freeSlack = node.freeSlack || 0;
 
           return (
             <g key={node.id}>
-              <circle cx={pos.x} cy={pos.y} r="30" fill={fillColor} stroke={strokeColor} strokeWidth={isCritical ? 3 : 2} />
-              <line x1={pos.x - 20} y1={pos.y} x2={pos.x + 20} y2={pos.y} stroke="#6b7280" strokeWidth="1" />
-              <text x={pos.x} y={pos.y - 8} textAnchor="middle" fontSize="12" fontWeight="bold"
-                    fill={isCritical ? '#dc2626' : '#059669'}>
+              {/* Rectangle du nœud (divisé en 4 sections) */}
+              <rect
+                x={pos.x - 40}
+                y={pos.y - 30}
+                width="80"
+                height="60"
+                fill={fillColor}
+                stroke={strokeColor}
+                strokeWidth={isCritical ? 3 : 2}
+                rx="4"
+              />
+
+              {/* Lignes de séparation (croix) */}
+              <line
+                x1={pos.x - 40}
+                y1={pos.y}
+                x2={pos.x + 40}
+                y2={pos.y}
+                stroke="#6b7280"
+                strokeWidth="1"
+              />
+              <line
+                x1={pos.x}
+                y1={pos.y - 30}
+                x2={pos.x}
+                y2={pos.y + 30}
+                stroke="#6b7280"
+                strokeWidth="1"
+              />
+
+              {/* Date au plus tôt (haut gauche) */}
+              <text
+                x={pos.x - 20}
+                y={pos.y - 10}
+                textAnchor="middle"
+                fontSize="10"
+                fontWeight="bold"
+                fill={isCritical ? '#dc2626' : '#059669'}
+              >
                 {node.earliestTime}
               </text>
-              <text x={pos.x} y={pos.y + 15} textAnchor="middle" fontSize="12" fontWeight="bold"
-                    fill={isCritical ? '#dc2626' : '#ea580c'}>
+
+              {/* Date au plus tard (haut droit) */}
+              <text
+                x={pos.x + 20}
+                y={pos.y - 10}
+                textAnchor="middle"
+                fontSize="10"
+                fontWeight="bold"
+                fill={isCritical ? '#dc2626' : '#ea580c'}
+              >
                 {node.latestTime}
               </text>
-              <text x={pos.x} y={pos.y + 50} textAnchor="middle" fontSize="14" fontWeight="bold" fill="#374151">
+
+              {/* Marge totale (bas gauche) */}
+              <text
+                x={pos.x - 20}
+                y={pos.y + 18}
+                textAnchor="middle"
+                fontSize="10"
+                fontWeight="bold"
+                fill={totalSlack === 0 ? '#dc2626' : '#7c3aed'}
+              >
+                {totalSlack}
+              </text>
+
+              {/* Marge libre (bas droit) */}
+              <text
+                x={pos.x + 20}
+                y={pos.y + 18}
+                textAnchor="middle"
+                fontSize="10"
+                fontWeight="bold"
+                fill={freeSlack === 0 ? '#dc2626' : '#2563eb'}
+              >
+                {freeSlack}
+              </text>
+
+              {/* Numéro du nœud en dessous */}
+              <text
+                x={pos.x}
+                y={pos.y + 50}
+                textAnchor="middle"
+                fontSize="14"
+                fontWeight="bold"
+                fill="#374151"
+              >
                 {node.nodeNumber}
               </text>
             </g>

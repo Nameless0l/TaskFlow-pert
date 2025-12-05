@@ -126,51 +126,89 @@ const PERTGraph = ({ pertData }) => {
           const isCritical = node.isCritical;
           const strokeColor = isCritical ? '#dc2626' : '#6b7280';
           const fillColor = isCritical ? '#fef2f2' : '#ffffff';
+          
+          // Calculer les marges
+          const totalSlack = node.latestTime - node.earliestTime;
+          const freeSlack = node.freeSlack || 0;
 
           return (
             <g key={node.id}>
-              {/* Cercle du nœud */}
-              <circle
-                cx={pos.x}
-                cy={pos.y}
-                r="30"
+              {/* Rectangle du nœud (divisé en 4 sections) */}
+              <rect
+                x={pos.x - 40}
+                y={pos.y - 30}
+                width="80"
+                height="60"
                 fill={fillColor}
                 stroke={strokeColor}
                 strokeWidth={isCritical ? 3 : 2}
+                rx="4"
               />
 
-              {/* Ligne de séparation */}
+              {/* Lignes de séparation (croix) */}
               <line
-                x1={pos.x - 20}
+                x1={pos.x - 40}
                 y1={pos.y}
-                x2={pos.x + 20}
+                x2={pos.x + 40}
                 y2={pos.y}
                 stroke="#6b7280"
                 strokeWidth="1"
               />
+              <line
+                x1={pos.x}
+                y1={pos.y - 30}
+                x2={pos.x}
+                y2={pos.y + 30}
+                stroke="#6b7280"
+                strokeWidth="1"
+              />
 
-              {/* Date au plus tôt */}
+              {/* Date au plus tôt (haut gauche) */}
               <text
-                x={pos.x}
-                y={pos.y - 8}
+                x={pos.x - 20}
+                y={pos.y - 10}
                 textAnchor="middle"
-                fontSize="12"
+                fontSize="10"
                 fontWeight="bold"
                 fill={isCritical ? '#dc2626' : '#059669'}
               >
                 {node.earliestTime}
               </text>
 
-              {/* Date au plus tard */}
+              {/* Date au plus tard (haut droit) */}
               <text
-                x={pos.x}
-                y={pos.y + 15}
+                x={pos.x + 20}
+                y={pos.y - 10}
                 textAnchor="middle"
-                fontSize="12"
+                fontSize="10"
                 fontWeight="bold"
                 fill={isCritical ? '#dc2626' : '#ea580c'}
               >
                 {node.latestTime}
+              </text>
+
+              {/* Marge totale (bas gauche) */}
+              <text
+                x={pos.x - 20}
+                y={pos.y + 18}
+                textAnchor="middle"
+                fontSize="10"
+                fontWeight="bold"
+                fill={totalSlack === 0 ? '#dc2626' : '#7c3aed'}
+              >
+                {totalSlack}
+              </text>
+
+              {/* Marge libre (bas droit) */}
+              <text
+                x={pos.x + 20}
+                y={pos.y + 18}
+                textAnchor="middle"
+                fontSize="10"
+                fontWeight="bold"
+                fill={freeSlack === 0 ? '#dc2626' : '#2563eb'}
+              >
+                {freeSlack}
               </text>
 
               {/* Numéro du nœud en dessous */}
@@ -412,41 +450,69 @@ export default function PERTContent() {
         {/* Légende */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
           <h2 className="text-2xl font-semibold text-gray-800 mb-4">Légende du diagramme PERT</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full border-2 border-gray-400 bg-white flex flex-col items-center justify-center text-xs">
-                <div className="text-green-600">10</div>
-                <div className="border-t border-gray-300 w-6 my-0.5"></div>
-                <div className="text-orange-600">15</div>
-              </div>
-              <div className="text-sm">
-                <p className="font-semibold text-gray-800">Nœud normal</p>
-                <p className="text-gray-600">Date au plus tôt / Date au plus tard</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full border-2 border-red-500 bg-red-50 flex flex-col items-center justify-center text-xs">
-                <div className="text-red-600">10</div>
-                <div className="border-t border-gray-300 w-6 my-0.5"></div>
-                <div className="text-red-600">10</div>
-              </div>
-              <div className="text-sm">
-                <p className="font-semibold text-gray-800">Nœud critique</p>
-                <p className="text-gray-600">Marge nulle</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded font-semibold text-sm">A</div>
-              <div className="text-sm">
-                <p className="font-semibold text-gray-800">Tâche normale</p>
-                <p className="text-gray-600">Avec marge</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Légende du nœud normal */}
+            <div>
+              <p className="font-semibold text-gray-800 mb-3">Format des nœuds :</p>
+              <div className="flex items-center gap-4">
+                <svg width="100" height="80" className="flex-shrink-0">
+                  <rect x="10" y="10" width="80" height="60" fill="#ffffff" stroke="#6b7280" strokeWidth="2" rx="4" />
+                  <line x1="10" y1="40" x2="90" y2="40" stroke="#6b7280" strokeWidth="1" />
+                  <line x1="50" y1="10" x2="50" y2="70" stroke="#6b7280" strokeWidth="1" />
+                  <text x="30" y="30" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#059669">10</text>
+                  <text x="70" y="30" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#ea580c">15</text>
+                  <text x="30" y="58" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#7c3aed">5</text>
+                  <text x="70" y="58" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#2563eb">2</text>
+                </svg>
+                <div className="text-sm">
+                  <p><span className="text-green-600 font-semibold">Haut gauche:</span> Date au plus tôt</p>
+                  <p><span className="text-orange-600 font-semibold">Haut droit:</span> Date au plus tard</p>
+                  <p><span className="text-purple-600 font-semibold">Bas gauche:</span> Marge totale</p>
+                  <p><span className="text-blue-600 font-semibold">Bas droit:</span> Marge libre</p>
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="bg-red-100 text-red-800 px-3 py-1 rounded font-semibold text-sm">B</div>
-              <div className="text-sm">
-                <p className="font-semibold text-gray-800">Tâche critique</p>
-                <p className="text-gray-600">Sans marge</p>
+
+            {/* Légende du nœud critique */}
+            <div>
+              <p className="font-semibold text-gray-800 mb-3">Nœud critique (marges nulles) :</p>
+              <div className="flex items-center gap-4">
+                <svg width="100" height="80" className="flex-shrink-0">
+                  <rect x="10" y="10" width="80" height="60" fill="#fef2f2" stroke="#dc2626" strokeWidth="3" rx="4" />
+                  <line x1="10" y1="40" x2="90" y2="40" stroke="#6b7280" strokeWidth="1" />
+                  <line x1="50" y1="10" x2="50" y2="70" stroke="#6b7280" strokeWidth="1" />
+                  <text x="30" y="30" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#dc2626">10</text>
+                  <text x="70" y="30" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#dc2626">10</text>
+                  <text x="30" y="58" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#dc2626">0</text>
+                  <text x="70" y="58" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#dc2626">0</text>
+                </svg>
+                <div className="text-sm">
+                  <p className="text-gray-600">Un nœud est <span className="text-red-600 font-semibold">critique</span> lorsque:</p>
+                  <p className="text-gray-600">• Date tôt = Date tard</p>
+                  <p className="text-gray-600">• Marge totale = 0</p>
+                  <p className="text-gray-600">• Bordure rouge épaisse</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Légende des tâches */}
+            <div className="md:col-span-2">
+              <p className="font-semibold text-gray-800 mb-3">Tâches sur les arêtes :</p>
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-3">
+                  <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded font-semibold text-sm border border-blue-600">A (5)</div>
+                  <div className="text-sm">
+                    <p className="font-semibold text-gray-800">Tâche normale</p>
+                    <p className="text-gray-600">Avec marge de manœuvre</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="bg-red-100 text-red-800 px-3 py-1 rounded font-semibold text-sm border border-red-600">B (3)</div>
+                  <div className="text-sm">
+                    <p className="font-semibold text-gray-800">Tâche critique</p>
+                    <p className="text-gray-600">Chemin critique - Sans marge</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -462,12 +528,12 @@ export default function PERTContent() {
           </div>
 
           <div className="mt-6 text-sm text-gray-600">
-            <p><strong>Légende :</strong></p>
+            <p><strong>Informations sur le diagramme :</strong></p>
             <ul className="list-disc list-inside space-y-1">
-              <li>Les nœuds en <span className="text-red-600 font-semibold">rouge</span> sont sur le chemin critique</li>
-              <li>Format des nœuds : Date au plus tôt | Date au plus tard</li>
-              <li>Format des flèches : Tâche(Durée)</li>
-              <li>Les lignes pointillées représentent les transitions vides</li>
+              <li>Les nœuds avec bordure <span className="text-red-600 font-semibold">rouge épaisse</span> sont sur le chemin critique</li>
+              <li>Format des nœuds : <span className="text-green-600 font-semibold">Date tôt</span> | <span className="text-orange-600 font-semibold">Date tard</span> | <span className="text-purple-600 font-semibold">Marge totale</span> | <span className="text-blue-600 font-semibold">Marge libre</span></li>
+              <li>Format des tâches sur les flèches : ID_Tâche (Durée)</li>
+              <li>Les lignes pointillées représentent les transitions fictives (sans tâche réelle)</li>
             </ul>
           </div>
         </div>
