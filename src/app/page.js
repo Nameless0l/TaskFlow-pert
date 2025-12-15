@@ -355,6 +355,15 @@ export default function Home() {
             </div>
           </div>
         </div>
+        
+        {/* Footer */}
+        <footer className="text-center py-6 text-slate-500 text-sm">
+          <p className="flex items-center justify-center gap-2">
+            <Sparkles className="w-4 h-4 text-purple-500" />
+            <span>by <span className="font-semibold text-slate-700">Loic</span> for fun</span>
+            <Sparkles className="w-4 h-4 text-purple-500" />
+          </p>
+        </footer>
       </div>
     </div>
   );

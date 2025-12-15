@@ -1,3 +1,9 @@
+# TaskFlow - Générateur de Diagrammes Gantt et PERT
+
+**by Loic for fun** 🚀
+
+Application web pour créer et visualiser des diagrammes de Gantt et PERT avec calcul automatique des chemins critiques.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started

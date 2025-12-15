@@ -1,12 +1,24 @@
 // src/app/(pages)/visualization/VisualizationContent.jsx
 
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Download, Info, Clock, AlertCircle, Network, Calendar, BarChart3, FileText } from 'lucide-react';
-import { GanttAlgorithm } from '@/lib/gantt';
-import { PERTAlgorithm } from '@/lib/pert';
+import { useState, useEffect, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  ArrowLeft,
+  Download,
+  Info,
+  Clock,
+  AlertCircle,
+  Network,
+  Calendar,
+  BarChart3,
+  FileText,
+  Image,
+} from "lucide-react";
+import { GanttAlgorithm } from "@/lib/gantt";
+import { PERTAlgorithm } from "@/lib/pert";
+import { toPng } from "html-to-image";
 
 // Composant pour les onglets
 const TabButton = ({ active, onClick, icon: Icon, label, count }) => (
@@ -14,16 +26,18 @@ const TabButton = ({ active, onClick, icon: Icon, label, count }) => (
     onClick={onClick}
     className={`flex items-center gap-3 px-6 py-4 rounded-2xl font-semibold transition-all duration-300 ${
       active
-        ? 'bg-white text-blue-600 shadow-lg scale-105'
-        : 'text-slate-600 hover:text-slate-800 hover:bg-white/50'
+        ? "bg-white text-blue-600 shadow-lg scale-105"
+        : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
     }`}
   >
     <Icon className="w-5 h-5" />
     <span>{label}</span>
     {count !== undefined && (
-      <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-        active ? 'bg-blue-100 text-blue-600' : 'bg-slate-200 text-slate-600'
-      }`}>
+      <span
+        className={`px-2 py-1 rounded-full text-xs font-bold ${
+          active ? "bg-blue-100 text-blue-600" : "bg-slate-200 text-slate-600"
+        }`}
+      >
         {count}
       </span>
     )}
@@ -31,11 +45,9 @@ const TabButton = ({ active, onClick, icon: Icon, label, count }) => (
 );
 
 // Composant SVG pour le graphe PERT
-const PERTGraph = ({ pertData }) => {
-  const svgRef = useRef();
-
+const PERTGraph = ({ pertData, svgRef }) => {
   const pert = new PERTAlgorithm([]);
-  pert.nodes = new Map(pertData.nodes.map(node => [node.id, node]));
+  pert.nodes = new Map(pertData.nodes.map((node) => [node.id, node]));
   pert.edges = pertData.edges;
 
   const positions = pert.calculateNodePositions();
@@ -50,10 +62,24 @@ const PERTGraph = ({ pertData }) => {
         className="bg-white rounded-xl"
       >
         <defs>
-          <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+          <marker
+            id="arrowhead"
+            markerWidth="10"
+            markerHeight="7"
+            refX="9"
+            refY="3.5"
+            orient="auto"
+          >
             <polygon points="0 0, 10 3.5, 0 7" fill="#374151" />
           </marker>
-          <marker id="arrowhead-critical" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+          <marker
+            id="arrowhead-critical"
+            markerWidth="10"
+            markerHeight="7"
+            refX="9"
+            refY="3.5"
+            orient="auto"
+          >
             <polygon points="0 0, 10 3.5, 0 7" fill="#dc2626" />
           </marker>
         </defs>
@@ -64,36 +90,44 @@ const PERTGraph = ({ pertData }) => {
           if (!fromPos || !toPos) return null;
 
           const isCritical = edge.isCritical;
-          const strokeColor = isCritical ? '#dc2626' : '#374151';
-          const strokeWidth = isCritical ? 3 : 2;
+          const strokeColor = isCritical ? "#dc2626" : "#374151";
+          const strokeWidth = isCritical ? 2.5 : 1.5;
           const isDummy = edge.isDummy;
 
           return (
             <g key={index}>
               <line
-                x1={fromPos.x + 30} y1={fromPos.y}
-                x2={toPos.x - 30} y2={toPos.y}
-                stroke={strokeColor} strokeWidth={strokeWidth}
-                strokeDasharray={isDummy ? "5,5" : "none"}
-                markerEnd={isCritical ? "url(#arrowhead-critical)" : "url(#arrowhead)"}
+                x1={fromPos.x + 25}
+                y1={fromPos.y}
+                x2={toPos.x - 25}
+                y2={toPos.y}
+                stroke={strokeColor}
+                strokeWidth={strokeWidth}
+                strokeDasharray={isDummy ? "4,4" : "none"}
+                markerEnd={
+                  isCritical ? "url(#arrowhead-critical)" : "url(#arrowhead)"
+                }
               />
               {edge.task && (
                 <g>
                   <rect
-                    x={(fromPos.x + toPos.x) / 2 - 20} y={(fromPos.y + toPos.y) / 2 - 15}
-                    width="40" height="20"
-                    fill={isCritical ? '#fecaca' : '#dbeafe'}
-                    stroke={isCritical ? '#dc2626' : '#3b82f6'} rx="3"
+                    x={(fromPos.x + toPos.x) / 2 - 16}
+                    y={(fromPos.y + toPos.y) / 2 - 12}
+                    width="32"
+                    height="16"
+                    fill={isCritical ? "#fecaca" : "#dbeafe"}
+                    stroke={isCritical ? "#dc2626" : "#3b82f6"}
+                    rx="2"
                   />
-                  <text x={(fromPos.x + toPos.x) / 2} y={(fromPos.y + toPos.y) / 2 - 3}
-                        textAnchor="middle" fontSize="10" fontWeight="bold"
-                        fill={isCritical ? '#dc2626' : '#1e40af'}>
-                    {edge.task.id}
-                  </text>
-                  <text x={(fromPos.x + toPos.x) / 2} y={(fromPos.y + toPos.y) / 2 + 8}
-                        textAnchor="middle" fontSize="8"
-                        fill={isCritical ? '#dc2626' : '#1e40af'}>
-                    ({edge.duration})
+                  <text
+                    x={(fromPos.x + toPos.x) / 2}
+                    y={(fromPos.y + toPos.y) / 2 - 2}
+                    textAnchor="middle"
+                    fontSize="9"
+                    fontWeight="bold"
+                    fill={isCritical ? "#dc2626" : "#1e40af"}
+                  >
+                    {edge.task.id}({edge.duration})
                   </text>
                 </g>
               )}
@@ -106,9 +140,9 @@ const PERTGraph = ({ pertData }) => {
           if (!pos) return null;
 
           const isCritical = node.isCritical;
-          const strokeColor = isCritical ? '#dc2626' : '#6b7280';
-          const fillColor = isCritical ? '#fef2f2' : '#ffffff';
-          
+          const strokeColor = isCritical ? "#dc2626" : "#6b7280";
+          const fillColor = isCritical ? "#fef2f2" : "#ffffff";
+
           // Calculer les marges
           const totalSlack = node.latestTime - node.earliestTime;
           const freeSlack = node.freeSlack || 0;
@@ -117,78 +151,78 @@ const PERTGraph = ({ pertData }) => {
             <g key={node.id}>
               {/* Rectangle du nœud (divisé en 4 sections) */}
               <rect
-                x={pos.x - 40}
-                y={pos.y - 30}
-                width="80"
-                height="60"
+                x={pos.x - 30}
+                y={pos.y - 22}
+                width="60"
+                height="44"
                 fill={fillColor}
                 stroke={strokeColor}
-                strokeWidth={isCritical ? 3 : 2}
-                rx="4"
+                strokeWidth={isCritical ? 2.5 : 1.5}
+                rx="3"
               />
 
               {/* Lignes de séparation (croix) */}
               <line
-                x1={pos.x - 40}
+                x1={pos.x - 30}
                 y1={pos.y}
-                x2={pos.x + 40}
+                x2={pos.x + 30}
                 y2={pos.y}
-                stroke="#6b7280"
-                strokeWidth="1"
+                stroke="#9ca3af"
+                strokeWidth="0.5"
               />
               <line
                 x1={pos.x}
-                y1={pos.y - 30}
+                y1={pos.y - 22}
                 x2={pos.x}
-                y2={pos.y + 30}
-                stroke="#6b7280"
-                strokeWidth="1"
+                y2={pos.y + 22}
+                stroke="#9ca3af"
+                strokeWidth="0.5"
               />
 
               {/* Date au plus tôt (haut gauche) */}
               <text
-                x={pos.x - 20}
-                y={pos.y - 10}
+                x={pos.x - 15}
+                y={pos.y - 8}
                 textAnchor="middle"
-                fontSize="10"
+                fontSize="9"
                 fontWeight="bold"
-                fill={isCritical ? '#dc2626' : '#059669'}
+                fill={isCritical ? "#dc2626" : "#059669"}
               >
                 {node.earliestTime}
               </text>
 
               {/* Date au plus tard (haut droit) */}
               <text
-                x={pos.x + 20}
-                y={pos.y - 10}
+                x={pos.x + 15}
+                y={pos.y - 8}
                 textAnchor="middle"
-                fontSize="10"
+                fontSize="9"
                 fontWeight="bold"
-                fill={isCritical ? '#dc2626' : '#ea580c'}
+                fill={isCritical ? "#dc2626" : "#ea580c"}
               >
                 {node.latestTime}
               </text>
 
               {/* Marge totale (bas gauche) */}
               <text
-                x={pos.x - 20}
-                y={pos.y + 18}
+                x={pos.x - 15}
+                y={pos.y + 14}
                 textAnchor="middle"
-                fontSize="10"
+                fontSize="9"
                 fontWeight="bold"
-                fill={totalSlack === 0 ? '#dc2626' : '#7c3aed'}
+                fill={totalSlack === 0 ? "#dc2626" : "#7c3aed"}
               >
                 {totalSlack}
               </text>
 
               {/* Marge libre (bas droit) */}
               <text
-                x={pos.x + 20}
-                y={pos.y + 18}
+                x={pos.x + 15}
+                y={pos.y + 14}
                 textAnchor="middle"
-                fontSize="10"
+                fontSize="9"
                 fontWeight="bold"
-                fill={freeSlack === 0 ? '#dc2626' : '#2563eb'}
+                fill={freeSlack === 0 ? "#dc2626" : "#2563eb"}
               >
                 {freeSlack}
               </text>
@@ -196,9 +230,9 @@ const PERTGraph = ({ pertData }) => {
               {/* Numéro du nœud en dessous */}
               <text
                 x={pos.x}
-                y={pos.y + 50}
+                y={pos.y + 38}
                 textAnchor="middle"
-                fontSize="14"
+                fontSize="12"
                 fontWeight="bold"
                 fill="#374151"
               >
@@ -215,14 +249,16 @@ const PERTGraph = ({ pertData }) => {
 export default function VisualizationPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState('gantt');
+  const [activeTab, setActiveTab] = useState("gantt");
   const [ganttData, setGanttData] = useState(null);
   const [pertData, setPertData] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const ganttRef = useRef(null);
+  const pertRef = useRef(null);
 
   useEffect(() => {
-    const dataParam = searchParams.get('data');
+    const dataParam = searchParams.get("data");
     if (dataParam) {
       try {
         const tasksData = JSON.parse(dataParam);
@@ -240,7 +276,7 @@ export default function VisualizationPage() {
 
         setLoading(false);
       } catch (error) {
-        console.error('Erreur lors du calcul des diagrammes:', error);
+        console.error("Erreur lors du calcul des diagrammes:", error);
         setLoading(false);
       }
     }
@@ -250,11 +286,11 @@ export default function VisualizationPage() {
     if (!ganttData) return;
     const gantt = new GanttAlgorithm(tasks);
     const csv = gantt.exportToCSV();
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const blob = new Blob([csv], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = 'gantt_diagram.csv';
+    a.download = "gantt_diagram.csv";
     a.click();
     window.URL.revokeObjectURL(url);
   };
@@ -264,13 +300,94 @@ export default function VisualizationPage() {
     const pert = new PERTAlgorithm(tasks);
     const exportData = pert.exportData();
     const json = JSON.stringify(exportData, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
+    const blob = new Blob([json], { type: "application/json" });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = 'pert_diagram.json';
+    a.download = "pert_diagram.json";
     a.click();
     window.URL.revokeObjectURL(url);
+  };
+
+  const downloadGanttImage = async () => {
+    if (!ganttRef.current) return;
+    try {
+      const dataUrl = await toPng(ganttRef.current, {
+        backgroundColor: "#ffffff",
+        quality: 1,
+        pixelRatio: 2,
+      });
+      
+      // Ajouter le filigrane
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        
+        // Filigrane subtil
+        ctx.font = "28px Arial";
+        ctx.fillStyle = "rgba(150, 150, 150, 0.3)";
+        ctx.textAlign = "right";
+        ctx.fillText("by Loic for fun", canvas.width - 20, 35);
+        
+        const finalUrl = canvas.toDataURL("image/png");
+        const link = document.createElement("a");
+        link.download = "gantt_diagram.png";
+        link.href = finalUrl;
+        link.click();
+      };
+      img.src = dataUrl;
+    } catch (error) {
+      console.error("Erreur lors de l'export de l'image Gantt:", error);
+    }
+  };
+
+  const downloadPertImage = async () => {
+    const svgElement = pertRef.current?.querySelector("svg");
+    if (!svgElement) return;
+    try {
+      // Cloner le SVG pour ne pas modifier l'original
+      const clonedSvg = svgElement.cloneNode(true);
+      const svgData = new XMLSerializer().serializeToString(clonedSvg);
+      const svgBlob = new Blob([svgData], {
+        type: "image/svg+xml;charset=utf-8",
+      });
+      const url = URL.createObjectURL(svgBlob);
+
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const scale = 2; // Pour une meilleure résolution
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.scale(scale, scale);
+        ctx.drawImage(img, 0, 0);
+
+        // Filigrane subtil
+        ctx.save();
+        ctx.font = "14px Arial";
+        ctx.fillStyle = "rgba(150, 150, 150, 0.3)";
+        ctx.textAlign = "right";
+        ctx.fillText("by Loic for fun", img.width - 10, 20);
+        ctx.restore();
+
+        const pngUrl = canvas.toDataURL("image/png");
+        const link = document.createElement("a");
+        link.download = "pert_diagram.png";
+        link.href = pngUrl;
+        link.click();
+        URL.revokeObjectURL(url);
+      };
+      img.src = url;
+    } catch (error) {
+      console.error("Erreur lors de l'export de l'image PERT:", error);
+    }
   };
 
   const getTimelineScale = () => {
@@ -284,8 +401,12 @@ export default function VisualizationPage() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-6"></div>
-          <h2 className="text-2xl font-bold text-slate-800 mb-2">Génération des diagrammes</h2>
-          <p className="text-slate-600">Calcul des plannings et chemins critiques...</p>
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">
+            Génération des diagrammes
+          </h2>
+          <p className="text-slate-600">
+            Calcul des plannings et chemins critiques...
+          </p>
         </div>
       </div>
     );
@@ -297,9 +418,11 @@ export default function VisualizationPage() {
         <div className="text-center">
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h2 className="text-2xl font-semibold text-gray-800 mb-2">Erreur</h2>
-          <p className="text-gray-600 mb-4">Impossible de générer les diagrammes</p>
+          <p className="text-gray-600 mb-4">
+            Impossible de générer les diagrammes
+          </p>
           <button
-            onClick={() => router.push('/')}
+            onClick={() => router.push("/")}
             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
             Retour à l'accueil
@@ -321,14 +444,19 @@ export default function VisualizationPage() {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="flex items-center gap-4">
               <button
-                onClick={() => router.push('/')}
+                onClick={() => router.push("/")}
                 className="bg-white p-3 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 group"
               >
                 <ArrowLeft className="w-5 h-5 text-slate-600 group-hover:text-slate-800" />
               </button>
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-slate-800">Analyse du projet</h1>
-                <p className="text-slate-600">Durée totale: {totalDuration} jours • {tasks.length} tâches • {criticalTasksCount} critiques</p>
+                <h1 className="text-2xl md:text-3xl font-bold text-slate-800">
+                  Analyse du projet
+                </h1>
+                <p className="text-slate-600">
+                  Durée totale: {totalDuration} jours • {tasks.length} tâches •{" "}
+                  {criticalTasksCount} critiques
+                </p>
               </div>
             </div>
             <div className="flex gap-3">
@@ -345,6 +473,15 @@ export default function VisualizationPage() {
               >
                 <Download className="w-4 h-4" />
                 JSON
+              </button>
+              <button
+                onClick={
+                  activeTab === "gantt" ? downloadGanttImage : downloadPertImage
+                }
+                className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 shadow-md"
+              >
+                <Image className="w-4 h-4" />
+                PNG
               </button>
             </div>
           </div>
@@ -370,9 +507,13 @@ export default function VisualizationPage() {
               <div className="p-2 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg">
                 <BarChart3 className="w-5 h-5 text-white" />
               </div>
-              <span className="font-semibold text-slate-800">Tâches totales</span>
+              <span className="font-semibold text-slate-800">
+                Tâches totales
+              </span>
             </div>
-            <p className="text-3xl font-bold text-emerald-600">{tasks.length}</p>
+            <p className="text-3xl font-bold text-emerald-600">
+              {tasks.length}
+            </p>
             <p className="text-sm text-slate-600">tâches</p>
           </div>
 
@@ -381,9 +522,13 @@ export default function VisualizationPage() {
               <div className="p-2 bg-gradient-to-br from-red-500 to-red-600 rounded-lg">
                 <AlertCircle className="w-5 h-5 text-white" />
               </div>
-              <span className="font-semibold text-slate-800">Tâches critiques</span>
+              <span className="font-semibold text-slate-800">
+                Tâches critiques
+              </span>
             </div>
-            <p className="text-3xl font-bold text-red-600">{criticalTasksCount}</p>
+            <p className="text-3xl font-bold text-red-600">
+              {criticalTasksCount}
+            </p>
             <p className="text-sm text-slate-600">sans marge</p>
           </div>
 
@@ -394,7 +539,9 @@ export default function VisualizationPage() {
               </div>
               <span className="font-semibold text-slate-800">Efficacité</span>
             </div>
-            <p className="text-3xl font-bold text-purple-600">{Math.round((criticalTasksCount / tasks.length) * 100)}</p>
+            <p className="text-3xl font-bold text-purple-600">
+              {Math.round((criticalTasksCount / tasks.length) * 100)}
+            </p>
             <p className="text-sm text-slate-600">% critique</p>
           </div>
         </div>
@@ -403,21 +550,21 @@ export default function VisualizationPage() {
         <div className="bg-gradient-to-r from-blue-100 to-purple-100 p-2 rounded-2xl mb-8">
           <div className="flex gap-2 overflow-x-auto">
             <TabButton
-              active={activeTab === 'gantt'}
-              onClick={() => setActiveTab('gantt')}
+              active={activeTab === "gantt"}
+              onClick={() => setActiveTab("gantt")}
               icon={Calendar}
               label="Diagramme de Gantt"
             />
             <TabButton
-              active={activeTab === 'pert'}
-              onClick={() => setActiveTab('pert')}
+              active={activeTab === "pert"}
+              onClick={() => setActiveTab("pert")}
               icon={Network}
               label="Diagramme PERT"
               count={pertData.nodes.length}
             />
             <TabButton
-              active={activeTab === 'metrics'}
-              onClick={() => setActiveTab('metrics')}
+              active={activeTab === "metrics"}
+              onClick={() => setActiveTab("metrics")}
               icon={FileText}
               label="Métriques détaillées"
             />
@@ -425,22 +572,27 @@ export default function VisualizationPage() {
         </div>
 
         {/* Contenu des onglets */}
-        {activeTab === 'gantt' && (
+        {activeTab === "gantt" && (
           <div className="space-y-8">
             {/* Diagramme de Gantt */}
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-white/20">
               <div className="flex items-center gap-3 mb-6">
                 <Calendar className="w-6 h-6 text-blue-600" />
-                <h2 className="text-2xl font-semibold text-slate-800">Planification temporelle</h2>
+                <h2 className="text-2xl font-semibold text-slate-800">
+                  Planification temporelle
+                </h2>
               </div>
 
-              <div className="overflow-x-auto">
-                <div className="min-w-max">
+              <div className="overflow-x-auto" ref={ganttRef}>
+                <div className="min-w-max bg-white p-4">
                   <div className="flex mb-4">
                     <div className="w-64 flex-shrink-0"></div>
                     <div className="flex">
-                      {timelineScale.map(day => (
-                        <div key={day} className="w-8 text-center text-sm font-medium text-slate-600 border-l border-slate-200">
+                      {timelineScale.map((day) => (
+                        <div
+                          key={day}
+                          className="w-8 text-center text-sm font-medium text-slate-600 border-l border-slate-200"
+                        >
                           {day}
                         </div>
                       ))}
@@ -452,11 +604,13 @@ export default function VisualizationPage() {
                       <div key={task.id} className="flex items-center">
                         <div className="w-64 flex-shrink-0 pr-4">
                           <div className="flex items-center gap-3 mb-1">
-                            <span className={`px-3 py-1 rounded-lg text-sm font-bold ${
-                              task.isCritical
-                                ? 'bg-red-100 text-red-800'
-                                : 'bg-blue-100 text-blue-800'
-                            }`}>
+                            <span
+                              className={`px-3 py-1 rounded-lg text-sm font-bold ${
+                                task.isCritical
+                                  ? "bg-red-100 text-red-800"
+                                  : "bg-blue-100 text-blue-800"
+                              }`}
+                            >
                               {task.id}
                             </span>
                             <span className="text-sm font-medium text-slate-800 truncate">
@@ -469,14 +623,17 @@ export default function VisualizationPage() {
                         </div>
 
                         <div className="flex relative">
-                          {timelineScale.map(day => (
-                            <div key={day} className="w-8 h-10 border-l border-slate-200 relative">
+                          {timelineScale.map((day) => (
+                            <div
+                              key={day}
+                              className="w-8 h-10 border-l border-slate-200 relative"
+                            >
                               {day >= task.start && day < task.end && (
                                 <div
                                   className={`h-6 rounded-md mx-0.5 mt-2 shadow-sm ${
                                     task.isCritical
-                                      ? 'bg-red-500'
-                                      : 'bg-blue-500'
+                                      ? "bg-red-500"
+                                      : "bg-blue-500"
                                   }`}
                                   title={`${task.name} (${task.duration}j)`}
                                 />
@@ -506,11 +663,13 @@ export default function VisualizationPage() {
           </div>
         )}
 
-        {activeTab === 'pert' && (
+        {activeTab === "pert" && (
           <div className="space-y-8">
             {/* Légende PERT */}
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-white/20">
-              <h3 className="text-xl font-semibold text-slate-800 mb-6">Légende du diagramme PERT</h3>
+              <h3 className="text-xl font-semibold text-slate-800 mb-6">
+                Légende du diagramme PERT
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full border-2 border-slate-400 bg-white flex flex-col items-center justify-center text-xs">
@@ -530,21 +689,31 @@ export default function VisualizationPage() {
                     <div className="text-red-600 font-bold">10</div>
                   </div>
                   <div className="text-sm">
-                    <p className="font-semibold text-slate-800">Nœud critique</p>
+                    <p className="font-semibold text-slate-800">
+                      Nœud critique
+                    </p>
                     <p className="text-slate-600">Marge nulle</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded font-semibold text-sm">A (5)</div>
+                  <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded font-semibold text-sm">
+                    A (5)
+                  </div>
                   <div className="text-sm">
-                    <p className="font-semibold text-slate-800">Tâche normale</p>
+                    <p className="font-semibold text-slate-800">
+                      Tâche normale
+                    </p>
                     <p className="text-slate-600">ID (durée)</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="bg-red-100 text-red-800 px-3 py-1 rounded font-semibold text-sm">B (3)</div>
+                  <div className="bg-red-100 text-red-800 px-3 py-1 rounded font-semibold text-sm">
+                    B (3)
+                  </div>
                   <div className="text-sm">
-                    <p className="font-semibold text-slate-800">Tâche critique</p>
+                    <p className="font-semibold text-slate-800">
+                      Tâche critique
+                    </p>
                     <p className="text-slate-600">Sans marge</p>
                   </div>
                 </div>
@@ -555,64 +724,123 @@ export default function VisualizationPage() {
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-white/20">
               <div className="flex items-center gap-3 mb-6">
                 <Network className="w-6 h-6 text-emerald-600" />
-                <h2 className="text-2xl font-semibold text-slate-800">Réseau PERT</h2>
+                <h2 className="text-2xl font-semibold text-slate-800">
+                  Réseau PERT
+                </h2>
               </div>
 
-              <div className="w-full overflow-auto border border-slate-200 rounded-xl bg-slate-50" style={{ maxHeight: '600px' }}>
-                <PERTGraph pertData={pertData} />
+              <div
+                ref={pertRef}
+                className="w-full overflow-auto border border-slate-200 rounded-xl bg-white"
+                style={{ maxHeight: "600px" }}
+              >
+                <PERTGraph pertData={pertData} svgRef={pertRef} />
               </div>
             </div>
           </div>
         )}
 
-        {activeTab === 'metrics' && (
+        {activeTab === "metrics" && (
           <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-white/20">
             <div className="flex items-center gap-3 mb-6">
               <FileText className="w-6 h-6 text-purple-600" />
-              <h2 className="text-2xl font-semibold text-slate-800">Métriques détaillées</h2>
+              <h2 className="text-2xl font-semibold text-slate-800">
+                Métriques détaillées
+              </h2>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-slate-50">
-                    <th className="px-4 py-4 text-left font-semibold text-slate-800">Tâche</th>
-                    <th className="px-4 py-4 text-left font-semibold text-slate-800">Nom</th>
-                    <th className="px-4 py-4 text-center font-semibold text-slate-800">Durée</th>
-                    <th className="px-4 py-4 text-center font-semibold text-slate-800">Début tôt</th>
-                    <th className="px-4 py-4 text-center font-semibold text-slate-800">Début tard</th>
-                    <th className="px-4 py-4 text-center font-semibold text-slate-800">Fin tôt</th>
-                    <th className="px-4 py-4 text-center font-semibold text-slate-800">Fin tard</th>
-                    <th className="px-4 py-4 text-center font-semibold text-slate-800">Marge totale</th>
-                    <th className="px-4 py-4 text-center font-semibold text-slate-800">Marge libre</th>
-                    <th className="px-4 py-4 text-center font-semibold text-slate-800">Statut</th>
+                    <th className="px-4 py-4 text-left font-semibold text-slate-800">
+                      Tâche
+                    </th>
+                    <th className="px-4 py-4 text-left font-semibold text-slate-800">
+                      Nom
+                    </th>
+                    <th className="px-4 py-4 text-center font-semibold text-slate-800">
+                      Durée
+                    </th>
+                    <th className="px-4 py-4 text-center font-semibold text-slate-800">
+                      Début tôt
+                    </th>
+                    <th className="px-4 py-4 text-center font-semibold text-slate-800">
+                      Début tard
+                    </th>
+                    <th className="px-4 py-4 text-center font-semibold text-slate-800">
+                      Fin tôt
+                    </th>
+                    <th className="px-4 py-4 text-center font-semibold text-slate-800">
+                      Fin tard
+                    </th>
+                    <th className="px-4 py-4 text-center font-semibold text-slate-800">
+                      Marge totale
+                    </th>
+                    <th className="px-4 py-4 text-center font-semibold text-slate-800">
+                      Marge libre
+                    </th>
+                    <th className="px-4 py-4 text-center font-semibold text-slate-800">
+                      Statut
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {ganttData.taskMetrics.map((task, index) => (
-                    <tr key={task.id} className={`border-t border-slate-200 ${task.isCritical ? 'bg-red-50' : 'hover:bg-slate-50'} transition-colors`}>
+                    <tr
+                      key={task.id}
+                      className={`border-t border-slate-200 ${
+                        task.isCritical ? "bg-red-50" : "hover:bg-slate-50"
+                      } transition-colors`}
+                    >
                       <td className="px-4 py-4">
-                        <span className={`px-3 py-1 rounded-lg text-sm font-bold ${
-                          task.isCritical
-                            ? 'bg-red-100 text-red-800'
-                            : 'bg-slate-100 text-slate-800'
-                        }`}>
+                        <span
+                          className={`px-3 py-1 rounded-lg text-sm font-bold ${
+                            task.isCritical
+                              ? "bg-red-100 text-red-800"
+                              : "bg-slate-100 text-slate-800"
+                          }`}
+                        >
                           {task.id}
                         </span>
                       </td>
-                      <td className="px-4 py-4 font-medium text-slate-800">{task.name}</td>
-                      <td className="px-4 py-4 text-center font-semibold">{task.duration}</td>
-                      <td className="px-4 py-4 text-center">{task.earliestStart}</td>
-                      <td className="px-4 py-4 text-center">{task.latestStart}</td>
-                      <td className="px-4 py-4 text-center">{task.earliestFinish}</td>
-                      <td className="px-4 py-4 text-center">{task.latestFinish}</td>
+                      <td className="px-4 py-4 font-medium text-slate-800">
+                        {task.name}
+                      </td>
+                      <td className="px-4 py-4 text-center font-semibold">
+                        {task.duration}
+                      </td>
                       <td className="px-4 py-4 text-center">
-                        <span className={`font-semibold ${task.totalSlack === 0 ? 'text-red-600' : 'text-slate-600'}`}>
+                        {task.earliestStart}
+                      </td>
+                      <td className="px-4 py-4 text-center">
+                        {task.latestStart}
+                      </td>
+                      <td className="px-4 py-4 text-center">
+                        {task.earliestFinish}
+                      </td>
+                      <td className="px-4 py-4 text-center">
+                        {task.latestFinish}
+                      </td>
+                      <td className="px-4 py-4 text-center">
+                        <span
+                          className={`font-semibold ${
+                            task.totalSlack === 0
+                              ? "text-red-600"
+                              : "text-slate-600"
+                          }`}
+                        >
                           {task.totalSlack}
                         </span>
                       </td>
                       <td className="px-4 py-4 text-center">
-                        <span className={`font-semibold ${task.freeSlack === 0 ? 'text-red-600' : 'text-slate-600'}`}>
+                        <span
+                          className={`font-semibold ${
+                            task.freeSlack === 0
+                              ? "text-red-600"
+                              : "text-slate-600"
+                          }`}
+                        >
                           {task.freeSlack}
                         </span>
                       </td>

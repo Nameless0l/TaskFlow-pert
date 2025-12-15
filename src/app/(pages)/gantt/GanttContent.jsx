@@ -1,9 +1,17 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Download, Info, Clock, AlertCircle } from 'lucide-react';
-import { GanttAlgorithm } from '@/lib/gantt';
+import { useState, useEffect, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  ArrowLeft,
+  Download,
+  Info,
+  Clock,
+  AlertCircle,
+  Image,
+} from "lucide-react";
+import { GanttAlgorithm } from "@/lib/gantt";
+import { toPng } from "html-to-image";
 
 export default function GanttContent() {
   const router = useRouter();
@@ -11,9 +19,10 @@ export default function GanttContent() {
   const [ganttData, setGanttData] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const ganttRef = useRef(null);
 
   useEffect(() => {
-    const dataParam = searchParams.get('data');
+    const dataParam = searchParams.get("data");
     if (dataParam) {
       try {
         const tasksData = JSON.parse(dataParam);
@@ -24,7 +33,7 @@ export default function GanttContent() {
         setGanttData(result);
         setLoading(false);
       } catch (error) {
-        console.error('Erreur lors du calcul du diagramme de Gantt:', error);
+        console.error("Erreur lors du calcul du diagramme de Gantt:", error);
         setLoading(false);
       }
     }
@@ -35,13 +44,49 @@ export default function GanttContent() {
 
     const gantt = new GanttAlgorithm(tasks);
     const csv = gantt.exportToCSV();
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const blob = new Blob([csv], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = 'gantt_diagram.csv';
+    a.download = "gantt_diagram.csv";
     a.click();
     window.URL.revokeObjectURL(url);
+  };
+
+  const downloadImage = async () => {
+    if (!ganttRef.current) return;
+    try {
+      const dataUrl = await toPng(ganttRef.current, {
+        backgroundColor: "#ffffff",
+        quality: 1,
+        pixelRatio: 2,
+      });
+      
+      // Ajouter le filigrane
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        
+        // Filigrane subtil
+        ctx.font = "28px Arial";
+        ctx.fillStyle = "rgba(150, 150, 150, 0.3)";
+        ctx.textAlign = "right";
+        ctx.fillText("by Loic for fun", canvas.width - 20, 35);
+        
+        const finalUrl = canvas.toDataURL("image/png");
+        const link = document.createElement("a");
+        link.download = "gantt_diagram.png";
+        link.href = finalUrl;
+        link.click();
+      };
+      img.src = dataUrl;
+    } catch (error) {
+      console.error("Erreur lors de l'export de l'image:", error);
+    }
   };
 
   const getTimelineScale = () => {
@@ -67,9 +112,11 @@ export default function GanttContent() {
         <div className="text-center">
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h2 className="text-2xl font-semibold text-gray-800 mb-2">Erreur</h2>
-          <p className="text-gray-600 mb-4">Impossible de générer le diagramme de Gantt</p>
+          <p className="text-gray-600 mb-4">
+            Impossible de générer le diagramme de Gantt
+          </p>
           <button
-            onClick={() => router.push('/')}
+            onClick={() => router.push("/")}
             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
             Retour à l'accueil
@@ -88,23 +135,36 @@ export default function GanttContent() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div className="flex items-center gap-4 mb-4 md:mb-0">
             <button
-              onClick={() => router.push('/')}
+              onClick={() => router.push("/")}
               className="bg-white p-2 rounded-lg shadow-md hover:shadow-lg transition-shadow"
             >
               <ArrowLeft className="w-5 h-5 text-gray-600" />
             </button>
             <div>
-              <h1 className="text-3xl font-bold text-gray-800">Diagramme de Gantt</h1>
-              <p className="text-gray-600">Durée totale du projet: {ganttData.projectDuration} jours</p>
+              <h1 className="text-3xl font-bold text-gray-800">
+                Diagramme de Gantt
+              </h1>
+              <p className="text-gray-600">
+                Durée totale du projet: {ganttData.projectDuration} jours
+              </p>
             </div>
           </div>
-          <button
-            onClick={downloadCSV}
-            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
-          >
-            <Download className="w-4 h-4" />
-            Exporter CSV
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={downloadCSV}
+              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+            >
+              <Download className="w-4 h-4" />
+              CSV
+            </button>
+            <button
+              onClick={downloadImage}
+              className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+            >
+              <Image className="w-4 h-4" />
+              PNG
+            </button>
+          </div>
         </div>
 
         {/* Statistiques du projet */}
@@ -114,45 +174,62 @@ export default function GanttContent() {
               <Clock className="w-5 h-5 text-blue-600" />
               <span className="font-semibold text-gray-800">Durée totale</span>
             </div>
-            <p className="text-2xl font-bold text-blue-600">{ganttData.projectDuration} jours</p>
+            <p className="text-2xl font-bold text-blue-600">
+              {ganttData.projectDuration} jours
+            </p>
           </div>
           <div className="bg-white p-4 rounded-lg shadow-md">
             <div className="flex items-center gap-2 mb-2">
               <Info className="w-5 h-5 text-green-600" />
-              <span className="font-semibold text-gray-800">Nombre de tâches</span>
+              <span className="font-semibold text-gray-800">
+                Nombre de tâches
+              </span>
             </div>
-            <p className="text-2xl font-bold text-green-600">{ganttData.schedule.length}</p>
+            <p className="text-2xl font-bold text-green-600">
+              {ganttData.schedule.length}
+            </p>
           </div>
           <div className="bg-white p-4 rounded-lg shadow-md">
             <div className="flex items-center gap-2 mb-2">
               <AlertCircle className="w-5 h-5 text-red-600" />
-              <span className="font-semibold text-gray-800">Tâches critiques</span>
+              <span className="font-semibold text-gray-800">
+                Tâches critiques
+              </span>
             </div>
-            <p className="text-2xl font-bold text-red-600">{ganttData.criticalTasks.length}</p>
+            <p className="text-2xl font-bold text-red-600">
+              {ganttData.criticalTasks.length}
+            </p>
           </div>
           <div className="bg-white p-4 rounded-lg shadow-md">
             <div className="flex items-center gap-2 mb-2">
               <Clock className="w-5 h-5 text-purple-600" />
-              <span className="font-semibold text-gray-800">Chemin critique</span>
+              <span className="font-semibold text-gray-800">
+                Chemin critique
+              </span>
             </div>
             <p className="text-sm font-bold text-purple-600">
-              {ganttData.criticalTasks.map(t => t.id).join(' → ')}
+              {ganttData.criticalTasks.map((t) => t.id).join(" → ")}
             </p>
           </div>
         </div>
 
         {/* Diagramme de Gantt */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-6">Diagramme de Gantt</h2>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+            Diagramme de Gantt
+          </h2>
 
-          <div className="overflow-x-auto">
-            <div className="min-w-max">
+          <div className="overflow-x-auto" ref={ganttRef}>
+            <div className="min-w-max bg-white p-4">
               {/* En-tête de timeline */}
               <div className="flex mb-4">
                 <div className="w-48 flex-shrink-0"></div>
                 <div className="flex">
-                  {timelineScale.map(day => (
-                    <div key={day} className="w-8 text-center text-sm font-medium text-gray-600 border-l border-gray-200">
+                  {timelineScale.map((day) => (
+                    <div
+                      key={day}
+                      className="w-8 text-center text-sm font-medium text-gray-600 border-l border-gray-200"
+                    >
                       {day}
                     </div>
                   ))}
@@ -166,11 +243,13 @@ export default function GanttContent() {
                     {/* Informations de la tâche */}
                     <div className="w-48 flex-shrink-0 pr-4">
                       <div className="flex items-center gap-2">
-                        <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                          task.isCritical
-                            ? 'bg-red-100 text-red-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}>
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-semibold ${
+                            task.isCritical
+                              ? "bg-red-100 text-red-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
                           {task.id}
                         </span>
                         <span className="text-sm font-medium text-gray-800 truncate">
@@ -184,18 +263,23 @@ export default function GanttContent() {
 
                     {/* Barre de Gantt */}
                     <div className="flex relative">
-                      {timelineScale.map(day => (
-                        <div key={day} className="w-8 h-8 border-l border-gray-200 relative">
+                      {timelineScale.map((day) => (
+                        <div
+                          key={day}
+                          className="w-8 h-8 border-l border-gray-200 relative"
+                        >
                           {day >= task.start && day < task.end && (
                             <div
                               className={`h-6 rounded-sm mx-0.5 mt-1 ${
                                 task.isCritical
-                                  ? 'bg-red-500 shadow-md'
-                                  : 'shadow-sm'
+                                  ? "bg-red-500 shadow-md"
+                                  : "shadow-sm"
                               }`}
                               style={{
-                                backgroundColor: task.isCritical ? '#EF4444' : task.color,
-                                opacity: task.isCritical ? 1 : 0.8
+                                backgroundColor: task.isCritical
+                                  ? "#EF4444"
+                                  : task.color,
+                                opacity: task.isCritical ? 1 : 0.8,
                               }}
                               title={`${task.name} (${task.duration}j)`}
                             />
@@ -226,49 +310,100 @@ export default function GanttContent() {
 
         {/* Tableau des métriques */}
         <div className="bg-white rounded-xl shadow-lg p-6">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-6">Métriques des tâches</h2>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+            Métriques des tâches
+          </h2>
 
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50">
-                  <th className="px-4 py-3 text-left font-semibold text-gray-800">Tâche</th>
-                  <th className="px-4 py-3 text-left font-semibold text-gray-800">Nom</th>
-                  <th className="px-4 py-3 text-center font-semibold text-gray-800">Durée</th>
-                  <th className="px-4 py-3 text-center font-semibold text-gray-800">Début au plus tôt</th>
-                  <th className="px-4 py-3 text-center font-semibold text-gray-800">Début au plus tard</th>
-                  <th className="px-4 py-3 text-center font-semibold text-gray-800">Fin au plus tôt</th>
-                  <th className="px-4 py-3 text-center font-semibold text-gray-800">Fin au plus tard</th>
-                  <th className="px-4 py-3 text-center font-semibold text-gray-800">Marge totale</th>
-                  <th className="px-4 py-3 text-center font-semibold text-gray-800">Marge libre</th>
-                  <th className="px-4 py-3 text-center font-semibold text-gray-800">Critique</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-800">
+                    Tâche
+                  </th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-800">
+                    Nom
+                  </th>
+                  <th className="px-4 py-3 text-center font-semibold text-gray-800">
+                    Durée
+                  </th>
+                  <th className="px-4 py-3 text-center font-semibold text-gray-800">
+                    Début au plus tôt
+                  </th>
+                  <th className="px-4 py-3 text-center font-semibold text-gray-800">
+                    Début au plus tard
+                  </th>
+                  <th className="px-4 py-3 text-center font-semibold text-gray-800">
+                    Fin au plus tôt
+                  </th>
+                  <th className="px-4 py-3 text-center font-semibold text-gray-800">
+                    Fin au plus tard
+                  </th>
+                  <th className="px-4 py-3 text-center font-semibold text-gray-800">
+                    Marge totale
+                  </th>
+                  <th className="px-4 py-3 text-center font-semibold text-gray-800">
+                    Marge libre
+                  </th>
+                  <th className="px-4 py-3 text-center font-semibold text-gray-800">
+                    Critique
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {ganttData.taskMetrics.map((task, index) => (
-                  <tr key={task.id} className={`border-t ${task.isCritical ? 'bg-red-50' : 'hover:bg-gray-50'}`}>
+                  <tr
+                    key={task.id}
+                    className={`border-t ${
+                      task.isCritical ? "bg-red-50" : "hover:bg-gray-50"
+                    }`}
+                  >
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                        task.isCritical
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-semibold ${
+                          task.isCritical
+                            ? "bg-red-100 text-red-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
                         {task.id}
                       </span>
                     </td>
-                    <td className="px-4 py-3 font-medium text-gray-800">{task.name}</td>
+                    <td className="px-4 py-3 font-medium text-gray-800">
+                      {task.name}
+                    </td>
                     <td className="px-4 py-3 text-center">{task.duration}</td>
-                    <td className="px-4 py-3 text-center">{task.earliestStart}</td>
-                    <td className="px-4 py-3 text-center">{task.latestStart}</td>
-                    <td className="px-4 py-3 text-center">{task.earliestFinish}</td>
-                    <td className="px-4 py-3 text-center">{task.latestFinish}</td>
                     <td className="px-4 py-3 text-center">
-                      <span className={task.totalSlack === 0 ? 'text-red-600 font-semibold' : 'text-gray-600'}>
+                      {task.earliestStart}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      {task.latestStart}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      {task.earliestFinish}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      {task.latestFinish}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span
+                        className={
+                          task.totalSlack === 0
+                            ? "text-red-600 font-semibold"
+                            : "text-gray-600"
+                        }
+                      >
                         {task.totalSlack}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <span className={task.freeSlack === 0 ? 'text-red-600 font-semibold' : 'text-gray-600'}>
+                      <span
+                        className={
+                          task.freeSlack === 0
+                            ? "text-red-600 font-semibold"
+                            : "text-gray-600"
+                        }
+                      >
                         {task.freeSlack}
                       </span>
                     </td>
