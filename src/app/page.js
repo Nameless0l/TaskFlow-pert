@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Trash2, Play, Database, Calendar, Network, Sparkles, BarChart3 } from 'lucide-react';
+import { Plus, Trash2, Play, Database, Calendar, Network, Sparkles, BarChart3, ExternalLink, Github } from 'lucide-react';
 
 export default function Home() {
   const router = useRouter();
@@ -357,7 +357,33 @@ export default function Home() {
         </div>
         
         {/* Footer */}
-        <footer className="text-center py-6 text-slate-500 text-sm">
+        <footer className="text-center py-8 text-slate-500 text-sm">
+          {/* See my other projects */}
+          <div className="mb-6">
+            <p className="text-slate-600 font-medium mb-3">See my other projects</p>
+            <div className="flex items-center justify-center gap-4 flex-wrap">
+              <a 
+                href="https://github.com/Nameless0l" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-all hover:scale-105"
+              >
+                <Github className="w-4 h-4" />
+                <span>GitHub</span>
+                <ExternalLink className="w-3 h-3 opacity-60" />
+              </a>
+              <a 
+                href="https://mbassiloic.tech/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all hover:scale-105"
+              >
+                <span>Portfolio</span>
+                <ExternalLink className="w-3 h-3 opacity-60" />
+              </a>
+            </div>
+          </div>
+          
           <p className="flex items-center justify-center gap-2">
             <Sparkles className="w-4 h-4 text-purple-500" />
             <span>by <span className="font-semibold text-slate-700">Loic</span> for fun</span>
