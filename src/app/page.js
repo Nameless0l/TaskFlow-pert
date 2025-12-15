@@ -1,52 +1,101 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Plus, Trash2, Play, Database, Calendar, Network, Sparkles, BarChart3, ExternalLink, Github } from 'lucide-react';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Plus,
+  Trash2,
+  Play,
+  Database,
+  Calendar,
+  Network,
+  Sparkles,
+  BarChart3,
+  ExternalLink,
+  Github,
+} from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState({
-    id: '',
-    name: '',
-    duration: '',
-    dependencies: []
+    id: "",
+    name: "",
+    duration: "",
+    dependencies: [],
   });
-  const [dependencyInput, setDependencyInput] = useState('');
+  const [dependencyInput, setDependencyInput] = useState("");
 
   const sampleData = [
-    { id: 'A', name: 'Choix de la cible', duration: 4, dependencies: [] },
-    { id: 'B', name: 'Mise en place des axes d\'argumentation', duration: 2, dependencies: ['A'] },
-    { id: 'C', name: 'Conception du mailing', duration: 8, dependencies: ['B'] },
-    { id: 'D', name: 'Impression du mailing', duration: 4, dependencies: ['C'] },
-    { id: 'E', name: 'Conception de l\'argumentaire de relance', duration: 6, dependencies: ['B'] },
-    { id: 'F', name: 'Location des fichiers', duration: 10, dependencies: ['A'] },
-    { id: 'G', name: 'Envoi des mails', duration: 7, dependencies: ['D', 'F'] },
-    { id: 'H', name: 'Recrutement des téléacteurs', duration: 13, dependencies: ['A'] },
-    { id: 'I', name: 'Formation des téléacteurs', duration: 2, dependencies: ['H'] }
+    { id: "A", name: "Choix de la cible", duration: 4, dependencies: [] },
+    {
+      id: "B",
+      name: "Mise en place des axes d'argumentation",
+      duration: 2,
+      dependencies: ["A"],
+    },
+    {
+      id: "C",
+      name: "Conception du mailing",
+      duration: 8,
+      dependencies: ["B"],
+    },
+    {
+      id: "D",
+      name: "Impression du mailing",
+      duration: 4,
+      dependencies: ["C"],
+    },
+    {
+      id: "E",
+      name: "Conception de l'argumentaire de relance",
+      duration: 6,
+      dependencies: ["B"],
+    },
+    {
+      id: "F",
+      name: "Location des fichiers",
+      duration: 10,
+      dependencies: ["A"],
+    },
+    { id: "G", name: "Envoi des mails", duration: 7, dependencies: ["D", "F"] },
+    {
+      id: "H",
+      name: "Recrutement des téléacteurs",
+      duration: 13,
+      dependencies: ["A"],
+    },
+    {
+      id: "I",
+      name: "Formation des téléacteurs",
+      duration: 2,
+      dependencies: ["H"],
+    },
   ];
 
   const addTask = () => {
     if (newTask.id && newTask.name && newTask.duration) {
-      if (tasks.find(task => task.id === newTask.id)) {
-        alert('Une tâche avec cet ID existe déjà.');
+      if (tasks.find((task) => task.id === newTask.id)) {
+        alert("Une tâche avec cet ID existe déjà.");
         return;
       }
 
-      setTasks([...tasks, {
-        ...newTask,
-        duration: parseInt(newTask.duration),
-        dependencies: newTask.dependencies
-      }]);
+      setTasks([
+        ...tasks,
+        {
+          ...newTask,
+          duration: parseInt(newTask.duration),
+          dependencies: newTask.dependencies,
+        },
+      ]);
 
-      setNewTask({ id: '', name: '', duration: '', dependencies: [] });
-      setDependencyInput('');
+      setNewTask({ id: "", name: "", duration: "", dependencies: [] });
+      setDependencyInput("");
     }
   };
 
   const removeTask = (taskId) => {
-    setTasks(tasks.filter(task => task.id !== taskId));
+    setTasks(tasks.filter((task) => task.id !== taskId));
   };
 
   const loadSampleData = () => {
@@ -55,32 +104,34 @@ export default function Home() {
 
   const clearData = () => {
     setTasks([]);
-    setNewTask({ id: '', name: '', duration: '', dependencies: [] });
-    setDependencyInput('');
+    setNewTask({ id: "", name: "", duration: "", dependencies: [] });
+    setDependencyInput("");
   };
 
   const generateDiagrams = () => {
     if (tasks.length === 0) {
-      alert('Veuillez ajouter au moins une tâche pour générer les diagrammes.');
+      alert("Veuillez ajouter au moins une tâche pour générer les diagrammes.");
       return;
     }
 
     const invalidDependencies = [];
-    tasks.forEach(task => {
-      task.dependencies.forEach(dep => {
-        if (!tasks.find(t => t.id === dep)) {
-          invalidDependencies.push(`Tâche ${task.id}: dépendance "${dep}" introuvable`);
+    tasks.forEach((task) => {
+      task.dependencies.forEach((dep) => {
+        if (!tasks.find((t) => t.id === dep)) {
+          invalidDependencies.push(
+            `Tâche ${task.id}: dépendance "${dep}" introuvable`
+          );
         }
       });
     });
 
     if (invalidDependencies.length > 0) {
-      alert('Erreurs dans les dépendances:\n' + invalidDependencies.join('\n'));
+      alert("Erreurs dans les dépendances:\n" + invalidDependencies.join("\n"));
       return;
     }
 
     const queryParams = new URLSearchParams({
-      data: JSON.stringify(tasks)
+      data: JSON.stringify(tasks),
     });
 
     router.push(`/visualization?${queryParams.toString()}`);
@@ -90,14 +141,14 @@ export default function Home() {
     setDependencyInput(value);
     const deps = value
       .split(/[,;\s]+/)
-      .map(dep => dep.trim().toUpperCase())
-      .filter(dep => dep !== '' && dep.length > 0);
+      .map((dep) => dep.trim().toUpperCase())
+      .filter((dep) => dep !== "" && dep.length > 0);
 
-    setNewTask(prev => ({ ...prev, dependencies: deps }));
+    setNewTask((prev) => ({ ...prev, dependencies: deps }));
   };
 
   const getAvailableDependencies = () => {
-    return tasks.map(task => task.id).filter(id => id !== newTask.id);
+    return tasks.map((task) => task.id).filter((id) => id !== newTask.id);
   };
 
   return (
@@ -114,7 +165,8 @@ export default function Home() {
               </h1>
             </div>
             <p className="text-xl md:text-2xl text-slate-600 mb-8 max-w-3xl mx-auto leading-relaxed">
-              Créez et visualisez vos projets avec des diagrammes de Gantt et PERT professionnels
+              Créez et visualisez vos projets avec des diagrammes de Gantt et
+              PERT professionnels
             </p>
 
             <div className="flex flex-wrap justify-center gap-6 mb-12">
@@ -123,8 +175,12 @@ export default function Home() {
                   <Calendar className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-left">
-                  <h3 className="font-semibold text-slate-800">Diagramme de Gantt</h3>
-                  <p className="text-sm text-slate-600">Planification temporelle</p>
+                  <h3 className="font-semibold text-slate-800">
+                    Diagramme de Gantt
+                  </h3>
+                  <p className="text-sm text-slate-600">
+                    Planification temporelle
+                  </p>
                 </div>
               </div>
 
@@ -133,8 +189,12 @@ export default function Home() {
                   <Network className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-left">
-                  <h3 className="font-semibold text-slate-800">Diagramme PERT</h3>
-                  <p className="text-sm text-slate-600">Analyse des chemins critiques</p>
+                  <h3 className="font-semibold text-slate-800">
+                    Diagramme PERT
+                  </h3>
+                  <p className="text-sm text-slate-600">
+                    Analyse des chemins critiques
+                  </p>
                 </div>
               </div>
             </div>
@@ -146,7 +206,6 @@ export default function Home() {
       <div className="container mx-auto px-4 pb-16">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-3 gap-8">
-
             {/* Task Input Section */}
             <div className="lg:col-span-1">
               <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl p-8 border border-white/20 sticky top-8">
@@ -154,27 +213,43 @@ export default function Home() {
                   <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl">
                     <Plus className="w-6 h-6 text-white" />
                   </div>
-                  <h2 className="text-2xl font-bold text-slate-800">Nouvelle tâche</h2>
+                  <h2 className="text-2xl font-bold text-slate-800">
+                    Nouvelle tâche
+                  </h2>
                 </div>
 
                 <div className="space-y-6">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="text-sm font-semibold text-slate-700">ID de la tâche</label>
+                      <label className="text-sm font-semibold text-slate-700">
+                        ID de la tâche
+                      </label>
                       <input
                         type="text"
                         value={newTask.id}
-                        onChange={(e) => setNewTask(prev => ({ ...prev, id: e.target.value.toUpperCase() }))}
+                        onChange={(e) =>
+                          setNewTask((prev) => ({
+                            ...prev,
+                            id: e.target.value.toUpperCase(),
+                          }))
+                        }
                         className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-slate-50/50"
                         placeholder="A, B, C..."
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-semibold text-slate-700">Durée (jours)</label>
+                      <label className="text-sm font-semibold text-slate-700">
+                        Durée (jours)
+                      </label>
                       <input
                         type="number"
                         value={newTask.duration}
-                        onChange={(e) => setNewTask(prev => ({ ...prev, duration: e.target.value }))}
+                        onChange={(e) =>
+                          setNewTask((prev) => ({
+                            ...prev,
+                            duration: e.target.value,
+                          }))
+                        }
                         className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-slate-50/50"
                         placeholder="10"
                         min="1"
@@ -183,18 +258,27 @@ export default function Home() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-semibold text-slate-700">Nom de la tâche</label>
+                    <label className="text-sm font-semibold text-slate-700">
+                      Nom de la tâche
+                    </label>
                     <input
                       type="text"
                       value={newTask.name}
-                      onChange={(e) => setNewTask(prev => ({ ...prev, name: e.target.value }))}
+                      onChange={(e) =>
+                        setNewTask((prev) => ({
+                          ...prev,
+                          name: e.target.value,
+                        }))
+                      }
                       className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-slate-50/50"
                       placeholder="Description de la tâche"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-semibold text-slate-700">Dépendances</label>
+                    <label className="text-sm font-semibold text-slate-700">
+                      Dépendances
+                    </label>
                     <input
                       type="text"
                       value={dependencyInput}
@@ -204,7 +288,10 @@ export default function Home() {
                     />
                     <div className="text-sm text-slate-600">
                       {getAvailableDependencies().length > 0 ? (
-                        <p><span className="font-semibold">Disponibles :</span> {getAvailableDependencies().join(', ')}</p>
+                        <p>
+                          <span className="font-semibold">Disponibles :</span>{" "}
+                          {getAvailableDependencies().join(", ")}
+                        </p>
                       ) : (
                         <p>Ajoutez d&apos;abord des tâches</p>
                       )}
@@ -216,11 +303,12 @@ export default function Home() {
                             key={index}
                             className={`px-3 py-1 rounded-full text-xs font-semibold ${
                               getAvailableDependencies().includes(dep)
-                                ? 'bg-emerald-100 text-emerald-800'
-                                : 'bg-red-100 text-red-800'
+                                ? "bg-emerald-100 text-emerald-800"
+                                : "bg-red-100 text-red-800"
                             }`}
                           >
-                            {dep} {!getAvailableDependencies().includes(dep) && '⚠️'}
+                            {dep}{" "}
+                            {!getAvailableDependencies().includes(dep) && "⚠️"}
                           </span>
                         ))}
                       </div>
@@ -259,7 +347,6 @@ export default function Home() {
 
             {/* Tasks List and Generation */}
             <div className="lg:col-span-2 space-y-8">
-
               {/* Tasks List */}
               <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl p-8 border border-white/20">
                 <div className="flex items-center justify-between mb-8">
@@ -267,10 +354,14 @@ export default function Home() {
                     <div className="p-2 bg-gradient-to-br from-slate-500 to-slate-600 rounded-xl">
                       <BarChart3 className="w-6 h-6 text-white" />
                     </div>
-                    <h2 className="text-2xl font-bold text-slate-800">Tâches du projet</h2>
+                    <h2 className="text-2xl font-bold text-slate-800">
+                      Tâches du projet
+                    </h2>
                   </div>
                   <div className="bg-gradient-to-r from-blue-100 to-purple-100 px-4 py-2 rounded-full">
-                    <span className="text-lg font-bold text-slate-700">{tasks.length}</span>
+                    <span className="text-lg font-bold text-slate-700">
+                      {tasks.length}
+                    </span>
                   </div>
                 </div>
 
@@ -279,30 +370,47 @@ export default function Home() {
                     <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center">
                       <Calendar className="w-12 h-12 text-slate-400" />
                     </div>
-                    <h3 className="text-xl font-semibold text-slate-700 mb-2">Aucune tâche</h3>
-                    <p className="text-slate-500 mb-6">Ajoutez des tâches ou chargez un exemple</p>
+                    <h3 className="text-xl font-semibold text-slate-700 mb-2">
+                      Aucune tâche
+                    </h3>
+                    <p className="text-slate-500 mb-6">
+                      Ajoutez des tâches ou chargez un exemple
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
                     {tasks.map((task, index) => (
-                      <div key={index} className="group bg-gradient-to-r from-slate-50 to-blue-50 p-6 rounded-2xl border border-slate-200 hover:shadow-lg transition-all duration-300">
+                      <div
+                        key={index}
+                        className="group bg-gradient-to-r from-slate-50 to-blue-50 p-6 rounded-2xl border border-slate-200 hover:shadow-lg transition-all duration-300"
+                      >
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
                             <div className="flex items-center gap-4 mb-3">
                               <span className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 py-1 rounded-lg text-sm font-bold">
                                 {task.id}
                               </span>
-                              <h3 className="font-semibold text-slate-800 text-lg">{task.name}</h3>
+                              <h3 className="font-semibold text-slate-800 text-lg">
+                                {task.name}
+                              </h3>
                             </div>
                             <div className="flex items-center gap-6 text-sm text-slate-600">
                               <div className="flex items-center gap-2">
                                 <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                <span><span className="font-semibold">Durée:</span> {task.duration} jours</span>
+                                <span>
+                                  <span className="font-semibold">Durée:</span>{" "}
+                                  {task.duration} jours
+                                </span>
                               </div>
                               {task.dependencies.length > 0 && (
                                 <div className="flex items-center gap-2">
                                   <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                                  <span><span className="font-semibold">Dépend de:</span> {task.dependencies.join(', ')}</span>
+                                  <span>
+                                    <span className="font-semibold">
+                                      Dépend de:
+                                    </span>{" "}
+                                    {task.dependencies.join(", ")}
+                                  </span>
                                 </div>
                               )}
                             </div>
@@ -324,8 +432,13 @@ export default function Home() {
               {tasks.length > 0 && (
                 <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl p-8 border border-white/20">
                   <div className="text-center">
-                    <h2 className="text-2xl font-bold text-slate-800 mb-6">Prêt à visualiser ?</h2>
-                    <p className="text-slate-600 mb-8">Générez vos diagrammes de Gantt et PERT pour analyser votre projet</p>
+                    <h2 className="text-2xl font-bold text-slate-800 mb-6">
+                      Prêt à visualiser ?
+                    </h2>
+                    <p className="text-slate-600 mb-8">
+                      Générez vos diagrammes de Gantt et PERT pour analyser
+                      votre projet
+                    </p>
 
                     <button
                       onClick={generateDiagrams}
@@ -355,16 +468,18 @@ export default function Home() {
             </div>
           </div>
         </div>
-        
+
         {/* Footer */}
         <footer className="text-center py-8 text-slate-500 text-sm">
           {/* See my other projects */}
           <div className="mb-6">
-            <p className="text-slate-600 font-medium mb-3">See my other projects</p>
+            <p className="text-slate-600 font-medium mb-3">
+              See my other projects
+            </p>
             <div className="flex items-center justify-center gap-4 flex-wrap">
-              <a 
-                href="https://github.com/Nameless0l" 
-                target="_blank" 
+              <a
+                href="https://github.com/Nameless0l"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-all hover:scale-105"
               >
@@ -372,9 +487,9 @@ export default function Home() {
                 <span>GitHub</span>
                 <ExternalLink className="w-3 h-3 opacity-60" />
               </a>
-              <a 
-                href="https://mbassiloic.tech/" 
-                target="_blank" 
+              <a
+                href="https://mbassiloic.tech/"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all hover:scale-105"
               >
@@ -383,10 +498,13 @@ export default function Home() {
               </a>
             </div>
           </div>
-          
+
           <p className="flex items-center justify-center gap-2">
             <Sparkles className="w-4 h-4 text-purple-500" />
-            <span>by <span className="font-semibold text-slate-700">Loic</span> for fun</span>
+            <span>
+              by <span className="font-semibold text-slate-700">Loic</span> for
+              fun
+            </span>
             <Sparkles className="w-4 h-4 text-purple-500" />
           </p>
         </footer>

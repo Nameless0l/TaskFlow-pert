@@ -317,7 +317,7 @@ export default function VisualizationPage() {
         quality: 1,
         pixelRatio: 2,
       });
-      
+
       // Ajouter le filigrane
       const img = new window.Image();
       img.onload = () => {
@@ -326,13 +326,13 @@ export default function VisualizationPage() {
         canvas.height = img.height;
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0);
-        
+
         // Filigrane subtil
         ctx.font = "28px Arial";
         ctx.fillStyle = "rgba(150, 150, 150, 0.3)";
         ctx.textAlign = "right";
         ctx.fillText("by Loic for fun", canvas.width - 20, 35);
-        
+
         const finalUrl = canvas.toDataURL("image/png");
         const link = document.createElement("a");
         link.download = "gantt_diagram.png";
